@@ -1,0 +1,86 @@
+---
+title: "ML Project"
+author: "Aaron Adair"
+date: "8/5/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Modeling with Machine Learning Techniques
+
+##Introduction
+
+The goal of your project is to predict the manner in which they did the exercise. This is the “classe” variable in the training set. You may use any of the other variables to predict with. You should create a report describing how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did. You will also use your prediction model to predict 20 different test cases.
+
+## Model built
+
+The expacted outcome variable is classe, a 5 level of factor variable. In this dataset, participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in 5 different fashion: Class A - excatly according to the specification, Class B - throwing the elbows to the front, Class c- lifting the dumbbell only halfway, Class D - lowering the dumbbell only halfway, Class E - throwing the hips to the front.
+
+Class A correspons to the specified execution of the exercise, while the other 4 classes correpond to common mistakes. Decision tree will be used to create the model. After the model have been developed. Cross-validation will be performed. Two set of data will be created, original training data set (75%) and subtesting data set (25%).
+
+There are a lot of libraries to be useful for the ML work here.
+
+```{r libraries}
+library(ggplot2)
+library(lattice)
+library(randomForest)
+library(e1071)
+library(caret)
+library(rpart)
+library(rpart.plot)
+set.seed(3333)
+```
+
+
+We get the data from our online source and read it into a training and testing set.
+
+```{r load dataset}
+trainUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+testUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+
+
+trainingData <- read.csv(url(trainUrl), na.strings = c("NA", "#DIV/0!", ""))
+testingData <- read.csv(url(testUrl), na.strings = c("NA", "#DIV/0!", ""))
+
+trainingData <- trainingData[, colSums(is.na(trainingData)) == 0]
+testingData <- testingData[, colSums(is.na(testingData)) == 0]
+
+trainingData <- trainingData[, -c(1:7)]
+testingData <- testingData[, -c(1:7)]
+
+
+traningPartitionData <- createDataPartition(trainingData$classe,  p = 0.7, list = F)
+trainingDataSet <- trainingData[traningPartitionData, ]
+testingDataSet <- trainingData[-traningPartitionData, ]
+dim(trainingData)
+dim(testingDataSet)
+```
+# Decision Tree
+
+First, we use a decision tree to sort out and train a model.
+
+```{r decision tree}
+decisionTreeModel <- rpart(classe ~ ., data = trainingDataSet, method = "class")
+decisionTreePrediction <- predict(decisionTreeModel, testingDataSet, type = "class")
+
+rpart.plot(decisionTreeModel, main = "Decision Tree", under = T, faclen = 0)
+
+confusionMatrix(decisionTreePrediction, testingDataSet$classe)
+```
+
+Not too bad, with a fairly high accuracy. However, let's try another route.
+
+# Random Forest
+
+Here, we employ the random forest technique. 
+
+```{r random forst}
+randomForestModel <- randomForest(classe ~. , data = trainingDataSet, method = "class")
+randomForestPrediction <- predict(randomForestModel, testingDataSet, type = "class")
+
+confusionMatrix(randomForestPrediction, testingDataSet$classe)
+```
+
+The accuracy of the random forest was better than the decision tree in this case (99.6% compared to 74.6%)
