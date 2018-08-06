@@ -70,7 +70,7 @@ rpart.plot(decisionTreeModel, main = "Decision Tree", under = T, faclen = 0)
 confusionMatrix(decisionTreePrediction, testingDataSet$classe)
 ```
 
-Not too bad, with a fairly high accuracy. However, let's try another route.
+Not too bad, with a fairly high accuracy. However, the branching of the decision tree doesn't look too great; there isn't a nice division between groups early on, so the branching is probably not going to be great in the long run. Let's try another route.
 
 # Random Forest
 
